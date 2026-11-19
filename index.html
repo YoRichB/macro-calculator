@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0f1117">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<title>Macro Calculator</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --card: #1a1d27;
+    --text: #e8eaed;
+    --accent: #3b82f6;
+    --accent2: #10b981;
+    --muted: #9ca3af;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .container {
+    width: 100%;
+    max-width: 420px;
+  }
+  h1 {
+    text-align: center;
+    font-size: 1.6rem;
+    margin-bottom: 0.5rem;
+  }
+  .subtitle {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+  .card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  }
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+  input {
+    width: 100%;
+    padding: 0.9rem 1rem;
+    font-size: 1.1rem;
+    border: 2px solid #2d3340;
+    border-radius: 10px;
+    background: #12151c;
+    color: var(--text);
+    outline: none;
+  }
+  input:focus {
+    border-color: var(--accent);
+  }
+  .results {
+    margin-top: 1.5rem;
+    display: grid;
+    gap: 0.75rem;
+  }
+  .result-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.85rem 1rem;
+    background: #12151c;
+    border-radius: 10px;
+    border-left: 4px solid var(--accent);
+  }
+  .result-item.protein { border-left-color: #ef4444; }
+  .result-item.fat { border-left-color: #f59e0b; }
+  .result-item.fiber { border-left-color: #10b981; }
+  .result-item.sugar { border-left-color: #ec4899; }
+  .label { font-weight: 600; }
+  .value { font-size: 1.2rem; font-weight: 700; }
+  .note {
+    margin-top: 1.25rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.4;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Macro Calculator</h1>
+  <p class="subtitle">Based on the simple body-weight method</p>
+  <div class="card">
+    <label for="weight">Body Weight (lbs)</label>
+    <input type="number" id="weight" placeholder="e.g. 175" min="50" max="500" step="0.1" autofocus>
+    <div class="results" id="results" style="display:none;">
+      <div class="result-item">
+        <span class="label">Calories</span>
+        <span class="value" id="calories">—</span>
+      </div>
+      <div class="result-item protein">
+        <span class="label">Protein</span>
+        <span class="value" id="protein">—</span>
+      </div>
+      <div class="result-item fat">
+        <span class="label">Fat</span>
+        <span class="value" id="fat">—</span>
+      </div>
+      <div class="result-item fiber">
+        <span class="label">Fiber</span>
+        <span class="value" id="fiber">—</span>
+      </div>
+      <div class="result-item carbs">
+        <span class="label">Carbs</span>
+        <span class="value" id="carbs">—</span>
+      </div>
+      <div class="result-item sugar">
+        <span class="label">Added Sugar (max)</span>
+        <span class="value" id="sugar">—</span>
+      </div>
+    </div>
+    <p class="note">Calories = weight × 10 &nbsp;•&nbsp; Protein = weight × 1g &nbsp;•&nbsp; Fat = weight × 0.3g<br>Fiber = cals ÷ 1000 × 14 &nbsp;•&nbsp; Carbs from remaining calories<br>Added Sugar ≈ 5% of calories (lean/fat-loss target, excludes natural sugars in whole fruit & plain dairy)</p>
+  </div>
+</div>
+
+<script>
+const weightInput = document.getElementById('weight');
+const results = document.getElementById('results');
+const caloriesEl = document.getElementById('calories');
+const proteinEl = document.getElementById('protein');
+const fatEl = document.getElementById('fat');
+const fiberEl = document.getElementById('fiber');
+const carbsEl = document.getElementById('carbs');
+const sugarEl = document.getElementById('sugar');
+
+function calculate() {
+  const weight = parseFloat(weightInput.value);
+  if (!weight || weight < 50 || weight > 500) {
+    results.style.display = 'none';
+    return;
+  }
+
+  const calories = Math.round(weight * 10);
+  const protein = Math.round(weight * 1);
+  const fat = +(weight * 0.3).toFixed(1);
+  const fiber = +(calories / 1000 * 14).toFixed(1);
+
+  const proteinCals = protein * 4;
+  const fatCals = fat * 9;
+  const remaining = calories - proteinCals - fatCals;
+  const carbs = Math.max(0, Math.round(remaining / 4));
+
+  // Lean / fat-loss sugar target: ~5% of calories (WHO ideal for free/added sugars)
+  const sugar = Math.round((calories * 0.05) / 4);
+
+  caloriesEl.textContent = calories + ' cal';
+  proteinEl.textContent = protein + ' g';
+  fatEl.textContent = fat + ' g';
+  fiberEl.textContent = fiber + ' g';
+  carbsEl.textContent = carbs + ' g';
+  sugarEl.textContent = sugar + ' g';
+
+  results.style.display = 'grid';
+}
+
+weightInput.addEventListener('input', calculate);
+weightInput.addEventListener('change', calculate);
+
+// Register service worker for PWA installability
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('Service Worker registered', reg))
+      .catch(err => console.log('Service Worker registration failed', err));
+  });
+}
+</script>
+</body>
+</html>
