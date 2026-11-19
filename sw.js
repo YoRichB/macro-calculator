@@ -1,4 +1,4 @@
-const CACHE_NAME = 'macro-calc-v4';
+const CACHE_NAME = 'macro-calc-v5';
 const urlsToCache = [
   './',
   './index.html',
